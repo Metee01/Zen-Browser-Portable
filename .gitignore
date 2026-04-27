@@ -1,0 +1,7 @@
+# Klasör içeriklerini yoksay
+app/win/*
+data/profile*/*
+
+# Sadece .gitkeep dosyalarının yüklenmesine izin ver
+!app/win/.gitkeep
+!data/profile*/.gitkeep
