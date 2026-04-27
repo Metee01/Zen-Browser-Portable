@@ -1,0 +1,305 @@
+# ============================================================================
+# Zen Browser Portable — Build & Release Pipeline
+# ============================================================================
+# Bu workflow, zen-browser/desktop reposundaki yeni release'leri takip eder,
+# Windows kurulum dosyasını indirir, extract eder ve taşınabilir zip oluşturur.
+#
+# Tetiklenme:
+#   - Manuel (workflow_dispatch) — isteğe bağlı versiyon belirtilebilir
+#   - Otomatik (schedule) — her 6 saatte bir yeni release kontrolü
+# ============================================================================
+
+name: Build Zen Browser Portable
+
+on:
+  workflow_dispatch:
+    inputs:
+      zen_version:
+        description: 'Zen Browser sürümü (boş bırakılırsa en güncel sürüm kullanılır)'
+        required: false
+        default: ''
+      force_rebuild:
+        description: 'Mevcut release varsa bile yeniden oluştur'
+        required: false
+        type: boolean
+        default: false
+
+  schedule:
+    # Her 6 saatte bir yeni release kontrolü (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  build-portable:
+    name: Build & Release
+    runs-on: windows-latest
+
+    steps:
+      # ---------------------------------------------------------------
+      # 1. Repoyu checkout et
+      # ---------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------
+      # 2. Zen Browser'ın en güncel sürüm bilgisini al
+      # ---------------------------------------------------------------
+      - name: Get Zen Browser release info
+        id: zen_release
+        shell: pwsh
+        run: |
+          $inputVersion = "${{ github.event.inputs.zen_version }}"
+          $forceRebuild = "${{ github.event.inputs.force_rebuild }}"
+
+          # Sürüm bilgisini GitHub API'den al
+          if ($inputVersion) {
+            Write-Host "📌 Belirtilen sürüm kullanılıyor: $inputVersion"
+            $releaseUrl = "https://api.github.com/repos/zen-browser/desktop/releases/tags/$inputVersion"
+          } else {
+            Write-Host "🔍 En güncel sürüm aranıyor..."
+            $releaseUrl = "https://api.github.com/repos/zen-browser/desktop/releases/latest"
+          }
+
+          try {
+            $release = Invoke-RestMethod -Uri $releaseUrl -Headers @{
+              'User-Agent' = 'Zen-Browser-Portable-CI'
+              'Accept'     = 'application/vnd.github+json'
+            }
+          } catch {
+            Write-Host "::error::Zen Browser release bilgisi alınamadı: $_"
+            exit 1
+          }
+
+          $version = $release.tag_name
+          $releaseName = $release.name
+          $releaseBody = $release.body
+
+          Write-Host "✅ Zen Browser sürümü: $version"
+          Write-Host "   Release adı: $releaseName"
+
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "release_name=$releaseName" >> $env:GITHUB_OUTPUT
+
+          # Release body'yi dosyaya yaz (çok satırlı olduğu için)
+          $releaseBody | Out-File -FilePath "upstream_release_notes.txt" -Encoding utf8
+
+          # Bu sürüm zaten yayınlanmış mı kontrol et
+          $existingReleases = gh release list --limit 100 --json tagName 2>$null | ConvertFrom-Json
+          $alreadyExists = $existingReleases | Where-Object { $_.tagName -eq "v$version" }
+
+          if ($alreadyExists -and $forceRebuild -ne 'true') {
+            Write-Host "::warning::⏭️ Release v$version zaten mevcut. Atlanıyor."
+            echo "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            if ($alreadyExists) {
+              Write-Host "🔄 Mevcut release silinip yeniden oluşturulacak (force_rebuild=true)"
+              gh release delete "v$version" --yes --cleanup-tag 2>$null
+            }
+            echo "skip=false" >> $env:GITHUB_OUTPUT
+          }
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------------------------------------------
+      # 3. Windows installer'ını indir
+      # ---------------------------------------------------------------
+      - name: Download Zen Browser installer
+        if: steps.zen_release.outputs.skip == 'false'
+        shell: pwsh
+        run: |
+          $version = "${{ steps.zen_release.outputs.version }}"
+          $url = "https://github.com/zen-browser/desktop/releases/download/$version/zen.installer.exe"
+
+          Write-Host "⬇️ İndiriliyor: $url"
+          $ProgressPreference = 'SilentlyContinue'  # İndirme hızını artır
+
+          $maxRetries = 3
+          for ($i = 1; $i -le $maxRetries; $i++) {
+            try {
+              Invoke-WebRequest -Uri $url -OutFile "zen.installer.exe" -UseBasicParsing
+              break
+            } catch {
+              if ($i -eq $maxRetries) {
+                Write-Host "::error::İndirme $maxRetries denemede başarısız oldu: $_"
+                exit 1
+              }
+              Write-Host "⚠️ Deneme $i başarısız, yeniden deneniyor..."
+              Start-Sleep -Seconds 5
+            }
+          }
+
+          $fileSize = [math]::Round((Get-Item "zen.installer.exe").Length / 1MB, 2)
+          Write-Host "✅ İndirme tamamlandı: $fileSize MB"
+
+      # ---------------------------------------------------------------
+      # 4. Installer'ı extract et ve dosyaları app/win'e yerleştir
+      # ---------------------------------------------------------------
+      - name: Extract installer to app/win
+        if: steps.zen_release.outputs.skip == 'false'
+        shell: pwsh
+        run: |
+          Write-Host "📦 Installer extract ediliyor..."
+
+          # NSIS installer'ını 7-Zip ile aç (windows-latest'te önceden yüklü)
+          7z x zen.installer.exe -oextracted -y | Select-Object -Last 5
+
+          # Extract edilen içeriği göster (debug)
+          Write-Host "`n=== Extracted root contents ==="
+          Get-ChildItem -Path "extracted" -Depth 0 | Format-Table Name, Length, PSIsContainer
+
+          # Mozilla/Zen NSIS installer'ları browser dosyalarını 'core/' altına koyar
+          if (Test-Path "extracted/core") {
+            $sourceDir = "extracted/core"
+            Write-Host "✅ 'core/' klasörü bulundu"
+          } elseif (Test-Path "extracted/zen.exe") {
+            $sourceDir = "extracted"
+            Write-Host "✅ Dosyalar doğrudan root'ta bulundu"
+          } else {
+            Write-Host "::error::❌ Beklenen klasör yapısı bulunamadı!"
+            Write-Host "Extracted contents:"
+            Get-ChildItem -Path "extracted" -Recurse -Depth 2 | Format-Table FullName
+            exit 1
+          }
+
+          # Hedef klasörü temizle ve yeniden oluştur
+          if (Test-Path "app/win") {
+            # .gitkeep dosyasını koru
+            Remove-Item -Path "app/win/*" -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          New-Item -Path "app/win" -ItemType Directory -Force | Out-Null
+
+          # Browser dosyalarını kopyala
+          Copy-Item -Path "$sourceDir\*" -Destination "app\win\" -Recurse -Force
+          Write-Host "✅ Dosyalar app/win/ klasörüne kopyalandı"
+
+          # zen.exe varlığını doğrula
+          if (Test-Path "app/win/zen.exe") {
+            $fileCount = (Get-ChildItem -Path "app/win" -Recurse -File).Count
+            $totalSize = [math]::Round((Get-ChildItem -Path "app/win" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 2)
+            Write-Host "✅ Doğrulama başarılı: $fileCount dosya, toplam $totalSize MB"
+          } else {
+            Write-Host "::error::❌ zen.exe bulunamadı! app/win içeriği:"
+            Get-ChildItem -Path "app/win" -Depth 1 | Format-Table FullName
+            exit 1
+          }
+
+      # ---------------------------------------------------------------
+      # 5. Sadece gerekli dosyaları içeren portable zip oluştur
+      # ---------------------------------------------------------------
+      - name: Create portable zip
+        if: steps.zen_release.outputs.skip == 'false'
+        id: create_zip
+        shell: pwsh
+        run: |
+          $version = "${{ steps.zen_release.outputs.version }}"
+          $zipName = "Zen-Portable-v$version.zip"
+
+          Write-Host "📦 Portable ZIP oluşturuluyor: $zipName"
+          Write-Host "   Dahil edilen öğeler:"
+          Write-Host "   ├── app/          (Zen Browser dosyaları)"
+          Write-Host "   ├── data/         (Profil iskelet yapısı)"
+          Write-Host "   ├── PortableZen.exe"
+          Write-Host "   └── zenbrowser.bat"
+
+          # Staging klasörü oluştur (sadece gerekli dosyalar)
+          $staging = "staging"
+          New-Item -Path $staging -ItemType Directory -Force | Out-Null
+
+          # 1) app klasörü (browser dosyalarıyla birlikte)
+          Copy-Item -Path "app" -Destination "$staging\app" -Recurse -Force
+
+          # 2) data klasörü (profil iskelet yapısı — .gitkeep, user.js, profile.ini)
+          Copy-Item -Path "data" -Destination "$staging\data" -Recurse -Force
+
+          # 3) PortableZen.exe
+          Copy-Item -Path "PortableZen.exe" -Destination "$staging\PortableZen.exe" -Force
+
+          # 4) zenbrowser.bat
+          Copy-Item -Path "zenbrowser.bat" -Destination "$staging\zenbrowser.bat" -Force
+
+          # Staging içeriğini doğrula — sadece izin verilen öğeler var mı?
+          $rootItems = Get-ChildItem -Path $staging -Name
+          $allowedItems = @('app', 'data', 'PortableZen.exe', 'zenbrowser.bat')
+          foreach ($item in $rootItems) {
+            if ($item -notin $allowedItems) {
+              Write-Host "::error::❌ İzin verilmeyen öğe tespit edildi: $item"
+              exit 1
+            }
+          }
+          Write-Host "✅ Staging doğrulaması başarılı (sadece izin verilen dosyalar mevcut)"
+
+          # 7-Zip ile sıkıştır (daha iyi sıkıştırma oranı)
+          Push-Location $staging
+          7z a -tzip -mx=7 "..\$zipName" * | Select-Object -Last 3
+          Pop-Location
+
+          $zipSize = [math]::Round((Get-Item $zipName).Length / 1MB, 2)
+          Write-Host "✅ ZIP oluşturuldu: $zipName ($zipSize MB)"
+
+          echo "zip_name=$zipName" >> $env:GITHUB_OUTPUT
+
+      # ---------------------------------------------------------------
+      # 6. GitHub Release oluştur ve zip'i yükle
+      # ---------------------------------------------------------------
+      - name: Create GitHub Release
+        if: steps.zen_release.outputs.skip == 'false'
+        shell: pwsh
+        run: |
+          $version = "${{ steps.zen_release.outputs.version }}"
+          $zipName = "${{ steps.create_zip.outputs.zip_name }}"
+          $tagName = "v$version"
+
+          # Release notlarını oluştur
+          $releaseNotes = @"
+          ## 🌀 Zen Browser Portable — v$version
+
+          Bu sürüm, [Zen Browser v$version](https://github.com/zen-browser/desktop/releases/tag/$version) tabanlıdır.
+          Otomatik olarak GitHub Actions CI/CD pipeline'ı tarafından oluşturulmuştur.
+
+          ---
+
+          ### 📥 Kurulum
+          1. Aşağıdaki **Assets** bölümünden ``$zipName`` dosyasını indirin.
+          2. ZIP dosyasını istediğiniz bir konuma çıkartın (USB, masaüstü vb.).
+          3. ``PortableZen.exe`` veya ``zenbrowser.bat`` ile tarayıcıyı başlatın.
+
+          ### 📁 ZIP İçeriği
+          | Öğe | Açıklama |
+          |-----|----------|
+          | ``app/win/`` | Zen Browser uygulama dosyaları |
+          | ``data/`` | Profil verileri (taşınabilir, yerel kalır) |
+          | ``PortableZen.exe`` | Taşınabilir başlatıcı (EXE) |
+          | ``zenbrowser.bat`` | Alternatif başlatıcı (BAT) |
+
+          ### 🔗 Upstream Release Notları
+          Orijinal değişiklik notları için: [Zen Browser v$version](https://github.com/zen-browser/desktop/releases/tag/$version)
+
+          ---
+          > ⚠️ Bu bir topluluk projesidir, Zen Browser'ın resmi dağıtımı değildir.
+          "@
+
+          # Release oluştur ve zip'i yükle
+          gh release create $tagName $zipName `
+            --title "Zen Browser Portable v$version" `
+            --notes "$releaseNotes" `
+            --latest
+
+          Write-Host "🎉 Release oluşturuldu: v$version"
+          Write-Host "   https://github.com/${{ github.repository }}/releases/tag/$tagName"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------------------------------------------
+      # 7. Temizlik
+      # ---------------------------------------------------------------
+      - name: Cleanup
+        if: always()
+        shell: pwsh
+        run: |
+          Remove-Item -Path "zen.installer.exe" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "extracted" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "staging" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "upstream_release_notes.txt" -Force -ErrorAction SilentlyContinue
+          Write-Host "🧹 Geçici dosyalar temizlendi"
