@@ -2,7 +2,13 @@
 app/win/*
 data/profile*/*
 
-# Sadece iskelet dosyalarına ve optimizasyon ayarlarına izin ver
+# CI'da üretilen exe — repo'da tutulmaz
+PortableZen.exe
+
+# AI agent dosyaları
+AGENTS.md
+
+# Sadece iskelet dosyalarına ve optimasyon ayarlarına izin ver
 !app/win/.gitkeep
 !data/profile*/.gitkeep
 !data/profile*/user.js

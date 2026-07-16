@@ -71,18 +71,13 @@ Hepsi bu — taşınabilir Zen Browser'ınız kullanıma hazır. 🎉
 
 Bazı antivirüs motorları `PortableZen.exe` dosyasını şüpheli olarak işaretleyebilir. **Bu bir yanlış pozitiftir (false positive).** İşte nedeni:
 
-`PortableZen.exe`, aşağıdaki 3 satırlık batch betiğinin Bat-to-Exe dönüştürücüsü kullanılarak `.exe` formatına derlenmiş halinden ibarettir:
+`PortableZen.exe`, Windows ile birlikte gelen .NET C# derleyicisi (`csc.exe`) ile derlenmiş minimal bir C# sarmalayıcısıdır. Yalnızca `zen.exe` dosyasını `app/win/` dizininde bulup doğru profil yoluyla başlatır — harici bağımlılık yok, gizli davranış yok.
 
-```batch
-@echo off
-set APP_DIR=%~dp0app
-set DATA_DIR=%~dp0data
-"%APP_DIR%\win\zen.exe" -profile "%DATA_DIR%\profile1" -no-remote
+```
+src\launcher.cs  →  csc.exe /target:winexe  →  PortableZen.exe
 ```
 
-Bat-to-Exe araçları, betiği gizli bir konsol işlemi başlatan bir sarmalayıcının (wrapper) içine gömerek çalışır. Konsol penceresini gizleme ve komut çalıştırma mantığı, bazı zararlı yazılımların da kullandığı bir teknik olduğu için sezgisel (heuristic) tabanlı antivirüs motorları bu dosyayı zaman zaman işaretler. **Dosya herhangi bir zararlı kod içermemektedir.**
-
-🔬 **VirusTotal tarama sonuçları:** [Tam raporu görüntüle](https://www.virustotal.com/gui/file/4f7f75cea134a04cc4cca38cf8dbb7824c8e0f20258537e93458fb5a58aa91cd?nocache=1)
+Konsol penceresini gizleme ve komut çalıştırma mantığı, bazı zararlı yazılımların da kullandığı bir teknik olduğu için sezgisel (heuristic) tabanlı antivirüs motorları bu dosyayı zaman zaman işaretler. **Dosya herhangi bir zararlı kod içermemektedir.**
 
 > [!TIP]
 > `.exe` dosyasına güvenmiyorsanız, doğrudan `zenbrowser.bat` dosyasını çalıştırabilirsiniz — tamamen aynı işi yapar. `.exe` yalnızca kolaylık sağlamak için sunulmuştur (PortableApps.com gibi programlar aracılığıyla Zen Browser'ı bir arayüzde görmenizi sağlar).
@@ -107,7 +102,10 @@ Zen-Browser-Portable/
 │   ├── profile4/               # Ek profil yuvası
 │   └── profile5/               # Ek profil yuvası
 │
-├── PortableZen.exe             # Taşınabilir başlatıcı (zenbrowser.bat'tan derlenmiştir)
+├── src/
+│   └── launcher.cs             # C# sarmalayıcı kaynağı (CI'da PortableZen.exe olarak derlenir)
+│
+├── PortableZen.exe             # Taşınabilir başlatıcı (CI'da üretilir, Git tarafından takip edilmez)
 ├── zenbrowser.bat              # Başlatıcı batch betiği (kaynak)
 ```
 
@@ -118,24 +116,31 @@ Zen-Browser-Portable/
 
 ## ⚙️ Nasıl Çalışır?
 
-Taşınabilir başlatıcı, basit ama etkili bir batch betiği ile çalışır:
+Taşınabilir başlatıcı, Zen Browser'ı taşınabilir bir profil ile başlatan minimal bir C# sarmalayıcısı tarafından çalıştırılır:
 
-```batch
-@echo off
-set APP_DIR=%~dp0app
-set DATA_DIR=%~dp0data
-"%APP_DIR%\win\zen.exe" -profile "%DATA_DIR%\profile1" -no-remote
+```csharp
+string dir = Path.GetDirectoryName(
+    System.Reflection.Assembly.GetExecutingAssembly().Location);
+string zenExe = Path.Combine(dir, "app", "win", "zen.exe");
+string profile = Path.Combine(dir, "data", "profile1");
+Process.Start(new ProcessStartInfo {
+    FileName = zenExe,
+    Arguments = "-profile \"" + profile + "\" -no-remote",
+    UseShellExecute = false,
+    CreateNoWindow = true
+});
 ```
 
 **Her parçanın görevi:**
 
 | Bileşen | Amaç |
 |---|---|
-| `%~dp0` | Başlatıcının bulunduğu dizine çözümlenir ve tüm yolları **göreceli** hale getirerek gerçek taşınabilirlik sağlar. |
+| `GetExecutingAssembly()` | Başlatıcının bulunduğu dizine çözümlenir ve tüm yolları **göreceli** hale getirerek gerçek taşınabilirlik sağlar. |
 | `-profile` | Zen/Firefox'a, tüm profil verileri için varsayılan `%APPDATA%` konumu yerine belirtilen dizini kullanmasını söyler. |
 | `-no-remote` | Taşınabilir örneğin, ana makinede zaten çalışan herhangi bir Firefox veya Zen Browser oturumuna bağlanmasını önler. |
+| `CreateNoWindow = true` | Konsol penceresini gizleyerek daha temiz bir deneyim sağlar. |
 
-`PortableZen.exe` dosyası, bu batch betiğinin bat-to-exe derleyicisi kullanılarak bağımsız bir `.exe` dosyasına dönüştürülmüş halidir. Özel Zen ikonuyla birlikte daha temiz bir çift tıklama deneyimi sunar.
+`PortableZen.exe`, CI sırasında `src/launcher.cs` kaynak dosyasından yerleşik Windows C# derleyicisi (`csc.exe`) kullanılarak derlenir ve özel Zen ikonuyla birlikte temiz bir çift tıklama deneyimi sunar. Alternatif olarak `zenbrowser.bat` dosyasını da doğrudan çalıştırabilirsiniz — aynı sonucu verir.
 
 ---
 

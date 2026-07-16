@@ -71,18 +71,13 @@ That's it — your portable Zen Browser is ready to use. 🎉
 
 Some antivirus engines may flag `PortableZen.exe` as suspicious. **This is a false positive.** Here's why:
 
-`PortableZen.exe` is nothing more than the following 3-line batch script compiled into an `.exe` using a Bat-to-Exe converter:
+`PortableZen.exe` is a minimal C# wrapper compiled with the built-in Windows .NET compiler (`csc.exe`). It simply locates `zen.exe` in the `app/win/` directory and launches it with the correct profile path — no external dependencies, no obfuscation, no hidden behavior.
 
-```batch
-@echo off
-set APP_DIR=%~dp0app
-set DATA_DIR=%~dp0data
-"%APP_DIR%\win\zen.exe" -profile "%DATA_DIR%\profile1" -no-remote
+```
+src\launcher.cs  →  csc.exe /target:winexe  →  PortableZen.exe
 ```
 
-Bat-to-Exe tools work by embedding a script inside a wrapper that launches a hidden console process. This pattern — hiding a console window and executing commands — is the same technique used by some malware, which is why heuristic-based antivirus engines sometimes flag it. **The file does not contain any malicious code.**
-
-🔬 **VirusTotal scan results:** [View full report](https://www.virustotal.com/gui/file/4f7f75cea134a04cc4cca38cf8dbb7824c8e0f20258537e93458fb5a58aa91cd?nocache=1)
+This pattern — hiding a console window and executing commands — is sometimes flagged by heuristic-based antivirus engines, but **the file does not contain any malicious code.**
 
 > [!TIP]
 > If you don't trust the `.exe` file, you can simply run `zenbrowser.bat` directly — it does the exact same thing. The `.exe` is provided purely for convenience (allows you to see Zen Browser in a UI through programs like PortableApps.com).
@@ -107,7 +102,10 @@ Zen-Browser-Portable/
 │   ├── profile4/               # Additional profile slot
 │   └── profile5/               # Additional profile slot
 │
-├── PortableZen.exe             # Portable launcher (compiled from zenbrowser.bat)
+├── src/
+│   └── launcher.cs             # C# wrapper source (compiled to PortableZen.exe in CI)
+│
+├── PortableZen.exe             # Portable launcher (built in CI, not tracked by Git)
 ├── zenbrowser.bat              # Launcher batch script (source)
 ```
 
@@ -118,24 +116,31 @@ Zen-Browser-Portable/
 
 ## ⚙️ How It Works
 
-The portable launcher is powered by a simple but effective batch script:
+The portable launcher is powered by a simple C# wrapper that starts Zen Browser with a portable profile:
 
-```batch
-@echo off
-set APP_DIR=%~dp0app
-set DATA_DIR=%~dp0data
-"%APP_DIR%\win\zen.exe" -profile "%DATA_DIR%\profile1" -no-remote
+```csharp
+string dir = Path.GetDirectoryName(
+    System.Reflection.Assembly.GetExecutingAssembly().Location);
+string zenExe = Path.Combine(dir, "app", "win", "zen.exe");
+string profile = Path.Combine(dir, "data", "profile1");
+Process.Start(new ProcessStartInfo {
+    FileName = zenExe,
+    Arguments = "-profile \"" + profile + "\" -no-remote",
+    UseShellExecute = false,
+    CreateNoWindow = true
+});
 ```
 
 **What each part does:**
 
 | Component | Purpose |
 |---|---|
-| `%~dp0` | Resolves to the directory where the launcher lives, making all paths **relative** and truly portable. |
+| `GetExecutingAssembly()` | Resolves to the directory where the launcher lives, making all paths **relative** and truly portable. |
 | `-profile` | Tells Zen/Firefox to use the specified directory for all profile data instead of the default `%APPDATA%` location. |
 | `-no-remote` | Prevents the portable instance from connecting to any already-running Firefox or Zen Browser session on the host machine. |
+| `CreateNoWindow = true` | Hides the console window for a cleaner experience. |
 
-The `PortableZen.exe` file is simply this batch script converted to a standalone `.exe` using a bat-to-exe compiler, providing a cleaner double-click experience with the custom Zen icon.
+The `PortableZen.exe` is compiled from `src/launcher.cs` during CI using the built-in Windows C# compiler (`csc.exe`), providing a clean double-click experience with the custom Zen icon. Alternatively, you can run `zenbrowser.bat` directly — it achieves the same result.
 
 ---
 
