@@ -316,7 +316,10 @@ jobs:
           3. Launch with ``PortableZen.exe`` or ``zenbrowser.bat``.
 
           ### 🔄 Updating an existing copy
-          Close Zen, delete your ``app\win`` folder, then copy ``app`` and ``PortableZen.exe`` from this ZIP into your portable folder. Your ``data`` folder is not touched.
+          - **From inside Zen:** click **Download** on the *Update available* notice, then **Update and restart**. Finish it before unplugging a USB drive.
+          - **With this ZIP:** close Zen, delete your ``app\win`` folder, then copy ``app`` and ``PortableZen.exe`` from this ZIP into your portable folder.
+
+          Your ``data`` folder is not touched either way.
 
           ### 📁 ZIP Contents
           | Item | Description |
