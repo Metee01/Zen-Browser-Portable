@@ -93,6 +93,17 @@ Farklı profiller aynı anda açık olabilir. `zenbrowser.bat` içinde `set "PRO
 
 ## 🔄 Güncelleme
 
+### Zen'in içinden
+
+Yeni sürüm çıktığında Zen **Update available** (Güncelleme var) bildirimi gösterir. **Download**'a, hazır olunca da **Update and restart**'a tıklayın. Zen `app\win` içindeki dosyaları kendisi günceller; `data/` klasörünüz etkilenmez.
+
+- Zen indirmeden önce sorar; kısa süre kullandığınız bir bilgisayara kendiliğinden bir şey indirmez.
+- İndirilen dosya USB belleğe değil, kullandığınız bilgisayara (`C:\ProgramData` altına) kaydedilir. USB'yi çıkarmadan önce **Update and restart** ile güncellemeyi bitirin; bitirmezseniz bir sonraki bilgisayarda yeniden indirmeniz yeterli.
+- `PortableZen.exe` bekleyen bir güncellemeye dokunmaz, güncelleme bitince Zen'in güncelleme klasörünü siler.
+- `PortableZen.exe` ve `zenbrowser.bat` bu yolla güncellenmez. Başlatıcının en yeni halini istediğinizde yeni bir release'ten alın.
+
+### Yeni release ZIP'i ile
+
 1. Zen Browser'ı kapatın.
 2. [Releases](https://github.com/Metee01/Zen-Browser-Portable/releases) sayfasından en yeni ZIP'i indirin.
 3. Taşınabilir klasörünüzdeki **`app\win`** klasörünü silin.

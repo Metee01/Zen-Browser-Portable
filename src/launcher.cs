@@ -133,18 +133,22 @@ static class Program
         return 0;
     }
 
-    // True while zen.exe or updater.exe from this app\win folder is running.
-    // updater.exe counts because the browser is briefly closed while Zen applies an update.
+    // True while zen.exe from this app\win folder, or updater.exe for it, is running.
+    // updater.exe counts because the browser is briefly closed while Zen applies an
+    // update; Zen may run it from app\win or from its update folder in ProgramData.
     static bool IsBrowserRunningFrom(string appDir)
     {
-        string prefix = appDir.TrimEnd('\\') + "\\";
+        string appPrefix = appDir.TrimEnd('\\') + "\\";
+        string updatePrefix = RegistryCleanup.UpdateFolderFor(appDir) + "\\";
         foreach (string name in new[] { "zen", "updater" })
         {
             foreach (Process p in Process.GetProcessesByName(name))
             {
                 string path = NativeMethods.GetImagePath(p.Id);
                 p.Dispose();
-                if (path != null && path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                if (path == null) continue;
+                if (path.StartsWith(appPrefix, StringComparison.OrdinalIgnoreCase) ||
+                    (name == "updater" && path.StartsWith(updatePrefix, StringComparison.OrdinalIgnoreCase)))
                     return true;
             }
         }
@@ -286,17 +290,28 @@ static class RegistryCleanup
 
     // Zen also keeps a small update folder per install location under
     // C:\ProgramData\Mozilla-<GUID>\updates\<hash>, where <hash> is CityHash64
-    // (v1.0) of the install folder path in UTF-16. We remove only our own one.
+    // (v1.0) of the install folder path in UTF-16.
+    public static string UpdateFolderFor(string appDir)
+    {
+        string hash = CityHash.Hash64(System.Text.Encoding.Unicode.GetBytes(appDir.TrimEnd('\\'))).ToString("X16");
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            @"Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\updates\" + hash);
+    }
+
+    // Removes only our own update folder, and keeps it while Zen's built-in updater
+    // is in the middle of something (downloading, or downloaded and waiting for a
+    // restart): active-update.xml marks that, and the update file is in updates\.
     public static void RemoveUpdateFolder(string appDir)
     {
         try
         {
-            string path = appDir.TrimEnd('\\');
-            string hash = CityHash.Hash64(System.Text.Encoding.Unicode.GetBytes(path)).ToString("X16");
-            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                @"Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\updates\" + hash);
-            if (Directory.Exists(dir))
-                Directory.Delete(dir, true);
+            string dir = UpdateFolderFor(appDir);
+            if (!Directory.Exists(dir)) return;
+            if (File.Exists(Path.Combine(dir, "active-update.xml"))) return;
+            string updates = Path.Combine(dir, "updates");
+            if (Directory.Exists(updates) &&
+                Directory.GetFiles(updates, "*.mar", SearchOption.AllDirectories).Length > 0) return;
+            Directory.Delete(dir, true);
         }
         catch { }
     }

@@ -93,6 +93,17 @@ Different profiles can be open at the same time. In `zenbrowser.bat`, change `pr
 
 ## 🔄 Updating
 
+### From inside Zen
+
+When a new version is out, Zen shows **Update available**. Click **Download**, then **Update and restart** when it is ready. Zen updates the files in `app\win` itself; your `data/` folder is not touched.
+
+- Zen asks before downloading, so nothing is downloaded on a computer you only use briefly.
+- The download is stored on the computer you are using (under `C:\ProgramData`), not on the USB drive. Finish the update with **Update and restart** before unplugging; otherwise just download it again on the next computer.
+- `PortableZen.exe` leaves a pending update in place and removes Zen's update folder once the update is done.
+- `PortableZen.exe` and `zenbrowser.bat` themselves are not updated this way. Grab them from a new release when you want the latest launcher.
+
+### With a new release ZIP
+
 1. Close Zen Browser.
 2. Download the newest ZIP from [Releases](https://github.com/Metee01/Zen-Browser-Portable/releases).
 3. In your portable folder, delete the **`app\win`** folder.
