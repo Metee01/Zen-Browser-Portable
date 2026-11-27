@@ -17,5 +17,8 @@ if not exist "%ZEN_EXE%" (
 
 if not exist "%PROFILE_DIR%" mkdir "%PROFILE_DIR%"
 
+rem The crash reporter would store reports in %APPDATA%, outside the portable folder.
+set "MOZ_CRASHREPORTER_DISABLE=1"
+
 rem "start" lets this window close right away instead of waiting for the browser.
 start "" "%ZEN_EXE%" -profile "%PROFILE_DIR%" %*

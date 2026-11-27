@@ -98,7 +98,7 @@ Different profiles can be open at the same time. In `zenbrowser.bat`, change `pr
 3. In your portable folder, delete the **`app\win`** folder.
 4. From the new ZIP, copy the **`app`** folder and **`PortableZen.exe`** into your portable folder.
 
-Your bookmarks, passwords, extensions and history live in `data/` and are not touched.
+Your bookmarks, passwords, extensions and history live in `data/` and are not touched. Copies from before November 2026 also have a `user.js` in each profile folder; it does no harm and can be deleted, since the same defaults now come from `policies.json`.
 
 > [!CAUTION]
 > Never delete the `data/` folder when updating — it holds all of your browser data.
@@ -112,18 +112,22 @@ Your bookmarks, passwords, extensions and history live in `data/` and are not to
 1. Finds `app\win\zen.exe` next to itself (all paths are relative, so the folder can move).
 2. Starts Zen with `-profile data\<profile>`, which keeps all browser data inside the portable folder.
 3. Passes any links or files you opened it with straight to Zen. If this portable Zen is already open, Zen hands them to the running window instead of starting a second copy, and it never connects to a separately installed Zen.
-4. Waits in the background until the browser closes, then removes the registry values Zen wrote for this folder (see below).
+4. Waits in the background until the browser closes, then removes what Zen left on the computer for this folder (see below).
 
-The portable profiles also ship with a `user.js` that turns off automatic updates, the default-browser prompt, the crash reporter, telemetry and studies, and keeps the cache in memory instead of on the disk to spare USB drives. You can edit it freely; it is applied every time the browser starts.
+Portable defaults are set in [`app/win/distribution/policies.json`](distribution/policies.json), Zen's standard settings file for the whole installation, so they apply to every profile, including new ones. It turns off telemetry, studies, the default-browser prompt and agent, asks before downloading Zen updates, and keeps the cache in memory instead of on the disk to spare USB drives. The cache settings are only defaults: you can still change them in Zen's settings and your choice is kept. Open `about:policies` in Zen to see them.
 
 ---
 
 ## 🛡️ Privacy Notes
 
-- **Browser data:** Profiles, history, passwords, extensions and cache stay inside `data/`. In our testing nothing was written to `%APPDATA%\zen` or `%LOCALAPPDATA%\zen`.
-- **Registry:** While it runs, Zen (like Firefox) stores a few small values under `HKCU\Software\Mozilla\Zen`, such as the window size and the last launch time. They contain no browsing data. `PortableZen.exe` deletes the ones belonging to its own folder when the browser closes; values of an installed Zen are left alone. `zenbrowser.bat` does not clean them.
+- **Browser data:** Profiles, history, passwords, extensions and cache stay inside `data/`. In our testing nothing was written to `%APPDATA%\zen` or `%LOCALAPPDATA%\zen`, and the crash reporter (which would save reports in `%APPDATA%`) is turned off by both launchers.
+- **What Zen still leaves behind while it runs** (like Firefox, it contains no browsing data):
+  - a few small values under `HKCU\Software\Mozilla\Zen`, such as the window size and the last launch time;
+  - a small update folder under `C:\ProgramData\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\updates\`, named after the folder Zen runs from.
+
+  `PortableZen.exe` removes both for its own folder when the browser closes; an installed Zen is left alone. `zenbrowser.bat` does not clean them.
 - **Windows itself** may still remember that a program ran (for example in recent-files lists or prefetch data). That is outside of what a portable app can control.
-- **Download from the source:** Use the official Releases page of this repository, which is built automatically from the official Zen Browser installer.
+- **Download from the source:** Use the official Releases page of this repository, which is built automatically from the official Zen Browser installer. Each release lists the SHA256 of the ZIP and of the official installer it was built from; check yours with `(Get-FileHash .\Zen-Portable-v<version>.zip).Hash` in PowerShell.
 
 ---
 
@@ -146,11 +150,15 @@ Zen-Browser-Portable/
 ├── app/
 │   └── win/              # Zen Browser files (included in the release ZIP)
 │       ├── zen.exe
+│       ├── distribution/
+│       │   └── policies.json   # Portable defaults (copied from /distribution)
 │       └── ...
 ├── data/
 │   ├── profile1/         # Default profile
 │   ├── profile2/ … profile5/
 │   └── <name>/           # Any profile you create with --profile <name>
+├── distribution/
+│   └── policies.json     # Source of the portable defaults
 ├── src/
 │   └── launcher.cs       # Source of PortableZen.exe
 ├── PortableZen.exe       # Launcher (built by the release workflow)

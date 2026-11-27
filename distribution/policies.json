@@ -1,0 +1,16 @@
+{
+  "policies": {
+    "AppAutoUpdate": false,
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisableDefaultBrowserAgent": true,
+    "DontCheckDefaultBrowser": true,
+    "Preferences": {
+      "browser.cache.disk.enable": { "Value": false, "Status": "default" },
+      "browser.cache.memory.enable": { "Value": true, "Status": "default" },
+      "browser.cache.memory.capacity": { "Value": 262144, "Status": "default" },
+      "browser.crashReports.unsubmittedCheck.enabled": { "Value": false, "Status": "default" },
+      "browser.crashReports.unsubmittedCheck.autoSubmit2": { "Value": false, "Status": "default" }
+    }
+  }
+}

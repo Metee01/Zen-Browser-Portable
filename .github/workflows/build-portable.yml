@@ -184,6 +184,15 @@ jobs:
             exit 1
           }
 
+          # Portable defaults (telemetry, default browser, cache...) as enterprise policies
+          if (Test-Path "app/win/distribution/policies.json") {
+            Write-Host "::warning::Upstream now ships distribution/policies.json; it will be replaced."
+          }
+          New-Item -Path "app/win/distribution" -ItemType Directory -Force | Out-Null
+          Copy-Item -Path "distribution/policies.json" -Destination "app/win/distribution/policies.json" -Force
+          Get-Content "app/win/distribution/policies.json" -Raw | ConvertFrom-Json | Out-Null
+          Write-Host "✅ policies.json added to app/win/distribution/"
+
       # ---------------------------------------------------------------
       # 5. Build PortableZen.exe with C#
       # ---------------------------------------------------------------
@@ -245,7 +254,7 @@ jobs:
           # 1) app directory (with browser files)
           Copy-Item -Path "app" -Destination "$staging\app" -Recurse -Force
 
-          # 2) data directory (profile skeleton — .gitkeep, user.js)
+          # 2) data directory (empty profile folders)
           Copy-Item -Path "data" -Destination "$staging\data" -Recurse -Force
 
           # 3) PortableZen.exe
@@ -286,6 +295,12 @@ jobs:
           $zipName = "${{ steps.create_zip.outputs.zip_name }}"
           $tagName = "v$version"
 
+          # Checksums so users can verify the download
+          $zipHash = (Get-FileHash $zipName -Algorithm SHA256).Hash.ToLower()
+          $installerHash = (Get-FileHash "zen.installer.exe" -Algorithm SHA256).Hash.ToLower()
+          "$zipHash  $zipName" | Out-File -FilePath "$zipName.sha256" -Encoding ascii -NoNewline
+          Write-Host "🔐 SHA256 $zipName = $zipHash"
+
           # Release notes
           $releaseNotes = @"
           ## 🌀 Zen Browser Portable — v$version
@@ -300,13 +315,24 @@ jobs:
           2. Extract the ZIP to any location (USB, desktop, etc.).
           3. Launch with ``PortableZen.exe`` or ``zenbrowser.bat``.
 
+          ### 🔄 Updating an existing copy
+          Close Zen, delete your ``app\win`` folder, then copy ``app`` and ``PortableZen.exe`` from this ZIP into your portable folder. Your ``data`` folder is not touched.
+
           ### 📁 ZIP Contents
           | Item | Description |
           |------|-------------|
-          | ``app/win/`` | Zen Browser application files |
-          | ``data/`` | Profile data (portable, stays local) |
+          | ``app/win/`` | Zen Browser application files (with ``distribution/policies.json``) |
+          | ``data/`` | Empty profile folders (portable, stays local) |
           | ``PortableZen.exe`` | Portable launcher (EXE) |
           | ``zenbrowser.bat`` | Alternative launcher (BAT) |
+
+          ### 🔐 Verify your download
+          | File | SHA256 |
+          |------|--------|
+          | ``$zipName`` | ``$zipHash`` |
+          | Official ``zen.installer.exe`` $version it was built from | ``$installerHash`` |
+
+          PowerShell: ``(Get-FileHash .\$zipName).Hash`` — the result must match the first line (case does not matter).
 
           ### 🔗 Upstream Release Notes
           Original changelog: [Zen Browser v$version](https://github.com/zen-browser/desktop/releases/tag/$version)
@@ -316,7 +342,7 @@ jobs:
           "@
 
           # Create release and upload zip
-          gh release create $tagName $zipName `
+          gh release create $tagName $zipName "$zipName.sha256" `
             --title "Zen Browser Portable v$version" `
             --notes "$releaseNotes" `
             --latest
@@ -334,6 +360,7 @@ jobs:
         shell: pwsh
         run: |
           Remove-Item -Path "zen.installer.exe" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "*.zip.sha256" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "extracted" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "staging" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "upstream_release_notes.txt" -Force -ErrorAction SilentlyContinue

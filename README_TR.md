@@ -98,7 +98,7 @@ Farklı profiller aynı anda açık olabilir. `zenbrowser.bat` içinde `set "PRO
 3. Taşınabilir klasörünüzdeki **`app\win`** klasörünü silin.
 4. Yeni ZIP'teki **`app`** klasörünü ve **`PortableZen.exe`** dosyasını taşınabilir klasörünüze kopyalayın.
 
-Yer imleriniz, şifreleriniz, eklentileriniz ve geçmişiniz `data/` içinde durur ve etkilenmez.
+Yer imleriniz, şifreleriniz, eklentileriniz ve geçmişiniz `data/` içinde durur ve etkilenmez. Kasım 2026'dan önceki kopyalarda her profil klasöründe bir `user.js` de bulunur; zararı yoktur ve silinebilir, çünkü aynı varsayılanlar artık `policies.json`'dan gelir.
 
 > [!CAUTION]
 > Güncelleme yaparken `data/` klasörünü asla silmeyin — tüm tarayıcı verileriniz oradadır.
@@ -112,18 +112,22 @@ Yer imleriniz, şifreleriniz, eklentileriniz ve geçmişiniz `data/` içinde dur
 1. Yanındaki `app\win\zen.exe` dosyasını bulur (tüm yollar görecelidir, klasör taşınabilir).
 2. Zen'i `-profile data\<profil>` ile başlatır; böylece tüm tarayıcı verileri taşınabilir klasörde kalır.
 3. Birlikte açtığınız bağlantı veya dosyaları doğrudan Zen'e iletir. Bu taşınabilir Zen zaten açıksa Zen bunları ikinci bir kopya başlatmak yerine açık pencereye verir; ayrıca kurulu bir Zen'e asla bağlanmaz.
-4. Tarayıcı kapanana kadar arka planda bekler, sonra Zen'in bu klasör için kayıt defterine yazdığı değerleri siler (aşağıya bakın).
+4. Tarayıcı kapanana kadar arka planda bekler, sonra Zen'in bu klasör için bilgisayarda bıraktıklarını siler (aşağıya bakın).
 
-Taşınabilir profiller ayrıca bir `user.js` dosyasıyla gelir: otomatik güncellemeleri, varsayılan tarayıcı sorusunu, çökme raporlayıcısını, telemetriyi ve deneyleri kapatır; USB belleği yormamak için önbelleği diskte değil bellekte tutar. Dilediğiniz gibi düzenleyebilirsiniz; tarayıcı her başladığında uygulanır.
+Taşınabilir varsayılan ayarlar, Zen'in kurulumun tamamı için okuduğu standart ayar dosyasında, [`app/win/distribution/policies.json`](distribution/policies.json) içinde durur; böylece yeni oluşturulanlar dahil her profile uygulanır. Telemetriyi, deneyleri, varsayılan tarayıcı sorusunu ve ajanını kapatır, Zen güncellemelerini indirmeden önce sorar ve USB belleği yormamak için önbelleği diskte değil bellekte tutar. Önbellek ayarları yalnızca varsayılandır: Zen ayarlarından değiştirebilirsiniz ve seçiminiz korunur. Zen'de `about:policies` sayfasını açarak görebilirsiniz.
 
 ---
 
 ## 🛡️ Gizlilik Notları
 
-- **Tarayıcı verileri:** Profiller, geçmiş, şifreler, eklentiler ve önbellek `data/` içinde kalır. Testlerimizde `%APPDATA%\zen` veya `%LOCALAPPDATA%\zen` içine hiçbir şey yazılmadı.
-- **Kayıt defteri:** Zen (Firefox gibi) çalışırken `HKCU\Software\Mozilla\Zen` altına pencere boyutu ve son açılış zamanı gibi birkaç küçük değer yazar. Bunlarda gezinme verisi bulunmaz. `PortableZen.exe` tarayıcı kapanınca kendi klasörüne ait olanları siler; kurulu bir Zen'in değerlerine dokunmaz. `zenbrowser.bat` bu temizliği yapmaz.
+- **Tarayıcı verileri:** Profiller, geçmiş, şifreler, eklentiler ve önbellek `data/` içinde kalır. Testlerimizde `%APPDATA%\zen` veya `%LOCALAPPDATA%\zen` içine hiçbir şey yazılmadı. Raporlarını `%APPDATA%` içine kaydedecek olan çökme raporlayıcısı iki başlatıcıda da kapalıdır.
+- **Zen'in çalışırken yine de bıraktıkları** (Firefox'ta da aynıdır, içlerinde gezinme verisi yoktur):
+  - `HKCU\Software\Mozilla\Zen` altında pencere boyutu ve son açılış zamanı gibi birkaç küçük kayıt defteri değeri;
+  - `C:\ProgramData\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\updates\` altında, Zen'in çalıştığı klasöre göre adlandırılan küçük bir güncelleme klasörü.
+
+  `PortableZen.exe` tarayıcı kapanınca kendi klasörüne ait olan ikisini de siler; kurulu bir Zen'e dokunmaz. `zenbrowser.bat` bu temizliği yapmaz.
 - **Windows'un kendisi** bir programın çalıştığını yine de hatırlayabilir (örneğin son kullanılan dosyalar listesi veya prefetch verisi). Bu, taşınabilir bir uygulamanın kontrolü dışındadır.
-- **Kaynaktan indirin:** Bu deponun resmi Releases sayfasını kullanın; paketler resmi Zen Browser yükleyicisinden otomatik olarak üretilir.
+- **Kaynaktan indirin:** Bu deponun resmi Releases sayfasını kullanın; paketler resmi Zen Browser yükleyicisinden otomatik olarak üretilir. Her sürümde ZIP'in ve kaynak alınan resmi yükleyicinin SHA256 değeri yazar; kendi dosyanızı PowerShell'de `(Get-FileHash .\Zen-Portable-v<sürüm>.zip).Hash` ile kontrol edebilirsiniz.
 
 ---
 
@@ -146,11 +150,15 @@ Zen-Browser-Portable/
 ├── app/
 │   └── win/              # Zen Browser dosyaları (release ZIP'inde hazır gelir)
 │       ├── zen.exe
+│       ├── distribution/
+│       │   └── policies.json   # Taşınabilir varsayılan ayarlar (/distribution'dan kopyalanır)
 │       └── ...
 ├── data/
 │   ├── profile1/         # Varsayılan profil
 │   ├── profile2/ … profile5/
 │   └── <ad>/             # --profile <ad> ile oluşturduğunuz profiller
+├── distribution/
+│   └── policies.json     # Taşınabilir varsayılan ayarların kaynağı
 ├── src/
 │   └── launcher.cs       # PortableZen.exe'nin kaynağı
 ├── PortableZen.exe       # Başlatıcı (release iş akışı derler)
