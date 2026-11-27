@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://zen-browser.app"><img src="https://img.shields.io/badge/Zen%20Browser-Resmi%20Site-8338ec?style=for-the-badge&logo=firefox&logoColor=white" alt="Zen Browser"></a>
   <a href="https://github.com/zen-browser/desktop"><img src="https://img.shields.io/github/stars/zen-browser/desktop?style=for-the-badge&logo=github&label=Upstream%20Stars&color=ff6f61" alt="Stars"></a>
-  <a href="https://github.com/zen-browser/desktop/blob/dev/LICENSE"><img src="https://img.shields.io/badge/Lisans-MPL--2.0-blue?style=for-the-badge" alt="Lisans"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-MPL--2.0-blue?style=for-the-badge" alt="Lisans"></a>
   <a href="#"><img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d4?style=for-the-badge&logo=windows&logoColor=white" alt="Platform"></a>
 </p>
 
@@ -23,20 +23,21 @@
 
 ## 📖 Hakkında
 
-Bu proje, [Zen Browser](https://zen-browser.app)'ın Windows için **taşınabilir (portable) olarak yapılandırılmış** halidir. Zen Browser'ı USB bellek, harici disk veya bilgisayarınızdaki herhangi bir klasörden — **kurulum yapmadan ve sistemde iz bırakmadan** — doğrudan çalıştırmanızı sağlar.
+Bu proje, [Zen Browser](https://zen-browser.app)'ın Windows için **taşınabilir (portable) paketidir**. Zen Browser'ı USB bellekten, harici diskten veya bilgisayarınızdaki herhangi bir klasörden **kurulum yapmadan** çalıştırmanızı sağlar; tarayıcı verileriniz de o klasörün içinde kalır.
 
 > [!NOTE]
-> Zen Browser; verimlilik odaklı, açık kaynaklı ve Firefox tabanlı bir tarayıcıdır. Bu taşınabilir yapılandırma orijinal tarayıcıda **hiçbir değişiklik yapmaz**; yalnızca resmi dosyaları, profil dizinini yeniden yönlendiren taşınabilir bir başlatıcı ile sarar.
+> Zen Browser; verimlilik odaklı, açık kaynaklı ve Firefox tabanlı bir tarayıcıdır. Bu paket tarayıcıda **hiçbir değişiklik yapmaz**: resmi dosyaları kullanır ve Zen'i taşınabilir klasördeki profile yönlendiren küçük bir başlatıcı ekler.
 
 ### ✨ Temel Özellikler
 
 | Özellik | Açıklama |
 |---|---|
-| 🔒 **Sıfır Kurulum** | Yönetici izni gerekmez. Kayıt defteri girdisi oluşturmaz. Artık dosya bırakmaz. |
-| 💾 **Tamamen Bağımsız** | Tarayıcı dosyaları, profiller, yer imleri, eklentiler — her şey tek bir klasörde yaşar. |
-| 👤 **Çoklu Profil Desteği** | Kutudan çıktığı gibi 5 adet önceden yapılandırılmış profil yuvası. İş, kişisel ve diğer bağlamlar arasında kolayca geçiş yapın. |
-| 🔄 **Taşınabilir** | Tüm klasörü başka bir bilgisayara taşıyın, takın ve kaldığınız yerden devam edin. |
-| 🛡️ **Varsayılan Gizlilik** | `-no-remote` bayrağı ile çalışarak, sistemde kurulu olan herhangi bir Firefox/Zen örneğinden tamamen izole edilir. |
+| 🔒 **Kurulum Yok** | Yükleyici yok, yönetici izni gerekmez. Çıkartın ve çalıştırın. |
+| 💾 **Tek Klasör** | Tarayıcı dosyaları, profiller, yer imleri, eklentiler — her şey tek bir klasörde. |
+| 👤 **Çoklu Profil** | Hazır 5 profil yuvası ve istediğiniz kadar adlandırılmış profil. Başlatırken <kbd>Shift</kbd>'e basılı tutarak seçebilirsiniz. |
+| 🔗 **Bağlantı ve Dosya Açar** | Bağlantılar, `.html` dosyaları ve "Birlikte aç" çalışır. Açıkken tekrar başlatmak yalnızca yeni bir pencere açar. |
+| 🧹 **Arkasını Toplar** | Tarayıcı kapanınca `PortableZen.exe`, Zen'in bu klasör için kayıt defterine yazdığı küçük değerleri siler. |
+| 🔄 **Otomatik Sürümler** | GitHub Actions her yeni Zen sürümünü genellikle birkaç saat içinde paketler. |
 
 ---
 
@@ -49,38 +50,92 @@ Bu proje, [Zen Browser](https://zen-browser.app)'ın Windows için **taşınabil
 
 ### Kurulum
 
-1. **En son sürümü indirin:** [📦 Releases](https://github.com/Metee01/Zen-Browser-Portable/releases) sayfasından ZIP dosyasını indirin ve istediğiniz bir konuma çıkartın — masaüstü, USB bellek, harici disk, nereye isterseniz.
-
-2. **Zen Browser'ı indirin:** [Resmi indirme sayfasından](https://zen-browser.app/download) indirin:
-   - **Windows (x64)** yükleyicisini veya arşivini indirin.
-   - Tarayıcı dosyalarını çıkartın ve `app/win/` dizinine yerleştirin (`app/win/zen.exe` dosyasının mevcut olduğundan emin olun).
-
-   > [!TIP]
-   > Bilgisayarınızda zaten kurulu bir Zen Browser varsa, `C:\Program Files\Zen Browser\` içindeki dosyaları doğrudan `app/win/` klasörüne kopyalayabilirsiniz.
-
-3. **`PortableZen.exe`** dosyasına çift tıklayın ve gezinmeye başlayın!
-
-Hepsi bu — taşınabilir Zen Browser'ınız kullanıma hazır. 🎉
+1. [📦 Releases](https://github.com/Metee01/Zen-Browser-Portable/releases) sayfasından en son `Zen-Portable-v<sürüm>.zip` dosyasını indirin. İçinde resmi Zen Browser dosyaları zaten var.
+2. ZIP'i istediğiniz yere çıkartın — masaüstü, USB bellek, harici disk.
+3. **`PortableZen.exe`** dosyasına çift tıklayın ve gezinmeye başlayın! 🎉
 
 > [!TIP]
-> Komut satırından başlatmayı tercih ederseniz `zenbrowser.bat` dosyasını da doğrudan çalıştırabilirsiniz.
+> `.exe` yerine okuyup düzenleyebileceğiniz bir başlatıcı isterseniz `zenbrowser.bat` dosyasını kullanabilirsiniz. Aşağıda anlatılan kayıt defteri temizliğini yapmaz.
+
+<details>
+<summary>Release yerine depodan kurmak</summary>
+
+1. Bu depoyu klonlayın veya indirin.
+2. Zen Browser dosyalarını `app/win/` içine koyun; `app/win/zen.exe` bulunmalı. Dosyaları resmi yükleyiciden 7-Zip ile çıkartabilir (dosyalar `core` klasöründedir) ya da `C:\Program Files\Zen Browser\` klasöründen kopyalayabilirsiniz.
+3. Başlatıcıyı derleyin (SDK gerekmez, derleyici Windows ile gelir):
+
+   ```bat
+   C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /target:winexe /win32icon:zen-browser.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:PortableZen.exe src\launcher.cs
+   ```
+
+   Ya da doğrudan `zenbrowser.bat` kullanın.
+</details>
 
 ---
 
-## 🔍 Güvenlik ve Yanlış Pozitifler
+## 👤 Profiller
 
-Bazı antivirüs motorları `PortableZen.exe` dosyasını şüpheli olarak işaretleyebilir. **Bu bir yanlış pozitiftir (false positive).** İşte nedeni:
+ZIP beş profil klasörüyle gelir: `data/profile1` … `data/profile5`. Varsayılan `profile1`'dir.
 
-`PortableZen.exe`, Windows ile birlikte gelen .NET C# derleyicisi (`csc.exe`) ile derlenmiş minimal bir C# sarmalayıcısıdır. Yalnızca `zen.exe` dosyasını `app/win/` dizininde bulup doğru profil yoluyla başlatır — harici bağımlılık yok, gizli davranış yok.
+| Nasıl | Ne olur |
+|---|---|
+| `PortableZen.exe`'ye çift tıklamak | `data/profile1` açılır. |
+| Başlatırken <kbd>Shift</kbd>'e basılı tutmak | `data/` içindeki tüm klasörleri listeleyen küçük bir pencere açılır; birini seçersiniz. |
+| `PortableZen.exe --profile 2` | `data/profile2` açılır. Masaüstü kısayolu için kullanışlıdır. |
+| `PortableZen.exe --profile is` | `data/is` açılır; yoksa taşınabilir varsayılan ayarlarla oluşturulur. |
+
+Farklı profiller aynı anda açık olabilir. `zenbrowser.bat` içinde `set "PROFILE=profile1"` satırındaki `profile1`'i değiştirin.
+
+> [!WARNING]
+> Zen'in `-ProfileManager` seçeneğini kullanmayın. Profil listesini taşınabilir klasörün dışına, `%APPDATA%` içine kaydeder.
+
+---
+
+## 🔄 Güncelleme
+
+1. Zen Browser'ı kapatın.
+2. [Releases](https://github.com/Metee01/Zen-Browser-Portable/releases) sayfasından en yeni ZIP'i indirin.
+3. Taşınabilir klasörünüzdeki **`app\win`** klasörünü silin.
+4. Yeni ZIP'teki **`app`** klasörünü ve **`PortableZen.exe`** dosyasını taşınabilir klasörünüze kopyalayın.
+
+Yer imleriniz, şifreleriniz, eklentileriniz ve geçmişiniz `data/` içinde durur ve etkilenmez.
+
+> [!CAUTION]
+> Güncelleme yaparken `data/` klasörünü asla silmeyin — tüm tarayıcı verileriniz oradadır.
+
+---
+
+## ⚙️ Nasıl Çalışır?
+
+`PortableZen.exe`, Windows ile gelen C# derleyicisiyle derlenmiş küçük bir C# programıdır ([`src/launcher.cs`](src/launcher.cs)). Başlattığınızda:
+
+1. Yanındaki `app\win\zen.exe` dosyasını bulur (tüm yollar görecelidir, klasör taşınabilir).
+2. Zen'i `-profile data\<profil>` ile başlatır; böylece tüm tarayıcı verileri taşınabilir klasörde kalır.
+3. Birlikte açtığınız bağlantı veya dosyaları doğrudan Zen'e iletir. Bu taşınabilir Zen zaten açıksa Zen bunları ikinci bir kopya başlatmak yerine açık pencereye verir; ayrıca kurulu bir Zen'e asla bağlanmaz.
+4. Tarayıcı kapanana kadar arka planda bekler, sonra Zen'in bu klasör için kayıt defterine yazdığı değerleri siler (aşağıya bakın).
+
+Taşınabilir profiller ayrıca bir `user.js` dosyasıyla gelir: otomatik güncellemeleri, varsayılan tarayıcı sorusunu, çökme raporlayıcısını, telemetriyi ve deneyleri kapatır; USB belleği yormamak için önbelleği diskte değil bellekte tutar. Dilediğiniz gibi düzenleyebilirsiniz; tarayıcı her başladığında uygulanır.
+
+---
+
+## 🛡️ Gizlilik Notları
+
+- **Tarayıcı verileri:** Profiller, geçmiş, şifreler, eklentiler ve önbellek `data/` içinde kalır. Testlerimizde `%APPDATA%\zen` veya `%LOCALAPPDATA%\zen` içine hiçbir şey yazılmadı.
+- **Kayıt defteri:** Zen (Firefox gibi) çalışırken `HKCU\Software\Mozilla\Zen` altına pencere boyutu ve son açılış zamanı gibi birkaç küçük değer yazar. Bunlarda gezinme verisi bulunmaz. `PortableZen.exe` tarayıcı kapanınca kendi klasörüne ait olanları siler; kurulu bir Zen'in değerlerine dokunmaz. `zenbrowser.bat` bu temizliği yapmaz.
+- **Windows'un kendisi** bir programın çalıştığını yine de hatırlayabilir (örneğin son kullanılan dosyalar listesi veya prefetch verisi). Bu, taşınabilir bir uygulamanın kontrolü dışındadır.
+- **Kaynaktan indirin:** Bu deponun resmi Releases sayfasını kullanın; paketler resmi Zen Browser yükleyicisinden otomatik olarak üretilir.
+
+---
+
+## 🔍 Antivirüs Uyarıları
+
+Bazı antivirüs motorları veya Windows SmartScreen, `PortableZen.exe` küçük, yeni ve dijital olarak imzasız olduğu için uyarı verebilir. **Dosya herhangi bir zararlı kod içermez.** Kaynağın tamamı [`src/launcher.cs`](src/launcher.cs) dosyasındadır ve release iş akışı exe'yi doğrudan bu dosyadan derler:
 
 ```
 src\launcher.cs  →  csc.exe /target:winexe  →  PortableZen.exe
 ```
 
-Konsol penceresini gizleme ve komut çalıştırma mantığı, bazı zararlı yazılımların da kullandığı bir teknik olduğu için sezgisel (heuristic) tabanlı antivirüs motorları bu dosyayı zaman zaman işaretler. **Dosya herhangi bir zararlı kod içermemektedir.**
-
-> [!TIP]
-> `.exe` dosyasına güvenmiyorsanız, doğrudan `zenbrowser.bat` dosyasını çalıştırabilirsiniz — tamamen aynı işi yapar. `.exe` yalnızca kolaylık sağlamak için sunulmuştur (PortableApps.com gibi programlar aracılığıyla Zen Browser'ı bir arayüzde görmenizi sağlar).
+İsterseniz bunun yerine `zenbrowser.bat` dosyasını çalıştırabilirsiniz.
 
 ---
 
@@ -88,116 +143,25 @@ Konsol penceresini gizleme ve komut çalıştırma mantığı, bazı zararlı ya
 
 ```
 Zen-Browser-Portable/
-│
 ├── app/
-│   └── win/                    # Zen Browser dosyaları (Git tarafından takip edilmez)
-│       ├── zen.exe             # Ana tarayıcı çalıştırılabilir dosyası
-│       └── ...                 # Diğer tüm tarayıcı dosyaları
-│
+│   └── win/              # Zen Browser dosyaları (release ZIP'inde hazır gelir)
+│       ├── zen.exe
+│       └── ...
 ├── data/
-│   ├── profile.ini             # Profil yöneticisi yapılandırması
-│   ├── profile1/               # Varsayılan profil (aktif)
-│   ├── profile2/               # Ek profil yuvası
-│   ├── profile3/               # Ek profil yuvası
-│   ├── profile4/               # Ek profil yuvası
-│   └── profile5/               # Ek profil yuvası
-│
+│   ├── profile1/         # Varsayılan profil
+│   ├── profile2/ … profile5/
+│   └── <ad>/             # --profile <ad> ile oluşturduğunuz profiller
 ├── src/
-│   └── launcher.cs             # C# sarmalayıcı kaynağı (CI'da PortableZen.exe olarak derlenir)
-│
-├── PortableZen.exe             # Taşınabilir başlatıcı (CI'da üretilir, Git tarafından takip edilmez)
-├── zenbrowser.bat              # Başlatıcı batch betiği (kaynak)
+│   └── launcher.cs       # PortableZen.exe'nin kaynağı
+├── PortableZen.exe       # Başlatıcı (release iş akışı derler)
+└── zenbrowser.bat        # Düz metin alternatif başlatıcı
 ```
-
-> [!IMPORTANT]
-> Tarayıcı dosyalarını [Kurulum](#kurulum) talimatlarını takip ederek kendiniz eklemeniz gerekmektedir. Böylece her zaman doğrudan resmi kaynaktan en güncel sürümü kullanırsınız.
-
----
-
-## ⚙️ Nasıl Çalışır?
-
-Taşınabilir başlatıcı, Zen Browser'ı taşınabilir bir profil ile başlatan minimal bir C# sarmalayıcısı tarafından çalıştırılır:
-
-```csharp
-string dir = Path.GetDirectoryName(
-    System.Reflection.Assembly.GetExecutingAssembly().Location);
-string zenExe = Path.Combine(dir, "app", "win", "zen.exe");
-string profile = Path.Combine(dir, "data", "profile1");
-Process.Start(new ProcessStartInfo {
-    FileName = zenExe,
-    Arguments = "-profile \"" + profile + "\" -no-remote",
-    UseShellExecute = false,
-    CreateNoWindow = true
-});
-```
-
-**Her parçanın görevi:**
-
-| Bileşen | Amaç |
-|---|---|
-| `GetExecutingAssembly()` | Başlatıcının bulunduğu dizine çözümlenir ve tüm yolları **göreceli** hale getirerek gerçek taşınabilirlik sağlar. |
-| `-profile` | Zen/Firefox'a, tüm profil verileri için varsayılan `%APPDATA%` konumu yerine belirtilen dizini kullanmasını söyler. |
-| `-no-remote` | Taşınabilir örneğin, ana makinede zaten çalışan herhangi bir Firefox veya Zen Browser oturumuna bağlanmasını önler. |
-| `CreateNoWindow = true` | Konsol penceresini gizleyerek daha temiz bir deneyim sağlar. |
-
-`PortableZen.exe`, CI sırasında `src/launcher.cs` kaynak dosyasından yerleşik Windows C# derleyicisi (`csc.exe`) kullanılarak derlenir ve özel Zen ikonuyla birlikte temiz bir çift tıklama deneyimi sunar. Alternatif olarak `zenbrowser.bat` dosyasını da doğrudan çalıştırabilirsiniz — aynı sonucu verir.
-
----
-
-## 👤 Çoklu Profil Yönetimi
-
-Bu taşınabilir yapılandırma, `data/profile.ini` dosyasında tanımlanmış **5 adet önceden yapılandırılmış profil yuvası** ile birlikte gelir:
-
-| Profil | Yol | Durum |
-|---|---|---|
-| Profile1 | `data/profile1/` | ✅ Varsayılan |
-| Profile2 | `data/profile2/` | Kullanılabilir |
-| Profile3 | `data/profile3/` | Kullanılabilir |
-| Profile4 | `data/profile4/` | Kullanılabilir |
-| Profile5 | `data/profile5/` | Kullanılabilir |
-
-### Profil Değiştirme
-
-Farklı bir profil ile başlatmak için `zenbrowser.bat` dosyasını düzenleyin ve `profile1` yerine istediğiniz profili yazın:
-
-```batch
-"%APP_DIR%\win\zen.exe" -profile "%DATA_DIR%\profile2" -no-remote
-```
-
-Alternatif olarak, `-ProfileManager` bayrağı ile Zen Browser'ın yerleşik **Profil Yöneticisi**'ni kullanabilirsiniz:
-
-```batch
-"%APP_DIR%\win\zen.exe" -ProfileManager
-```
-
----
-
-## 🔄 Zen Browser'ı Güncelleme
-
-Zen Browser'ı daha yeni bir sürüme güncellemek için:
-
-1. En son Zen Browser'ı [zen-browser.app/download](https://zen-browser.app/download) adresinden indirin.
-2. `app/win/` klasörünün içeriğini silin.
-3. Yeni tarayıcı dosyalarını `app/win/` klasörüne çıkartın.
-4. Profilleriniz ve verileriniz `data/` klasöründe dokunulmadan kalır.
-
-> [!CAUTION]
-> Güncelleme yaparken `data/` dizinini **silmeyin**. Bu dizin tüm yer imlerinizi, şifrelerinizi, eklentilerinizi ve gezinme geçmişinizi içerir.
-
----
-
-## 🛡️ Güvenlik ve Gizlilik Notları
-
-- **İzole Çalışma:** `-no-remote` bayrağı, bu örneğin tamamen bağımsız çalışmasını sağlar.
-- **Sistem İzi Bırakmaz:** Profiller taşınabilir klasör içinde saklandığından, Windows kayıt defterine veya `%APPDATA%` dizinine hiçbir şey yazılmaz.
-- **USB Güvenli:** Bu yapılandırmayı bir USB bellekten çalıştırabilir ve ana bilgisayarda herhangi bir veri bırakmadan çıkarabilirsiniz.
-- **Sizin Sorumluluğunuz:** Bu yapılandırma taşınabilir olsa da, değiştirilmiş sürümlerden kaçınmak için Zen Browser dosyalarını her zaman [resmi kaynaktan](https://zen-browser.app) indirdiğinizden emin olun.
 
 ---
 
 ## 🙏 Atıf ve Teşekkürler
 
-Bu proje bir **topluluk taşınabilir yapılandırmasıdır** ve Zen Browser ekibinin **resmi bir ürünü değildir**.
+Bu proje bir **topluluk taşınabilir paketidir** ve Zen Browser ekibinin **resmi bir ürünü değildir**.
 
 <table>
   <tr>
@@ -227,9 +191,9 @@ Bu proje bir **topluluk taşınabilir yapılandırmasıdır** ve Zen Browser eki
 
 ## 📜 Lisans
 
-Bu taşınabilir yapılandırma (başlatıcı betikleri, dizin yapısı ve dokümantasyon) kişisel kullanım için olduğu gibi sunulmaktadır.
+Bu depodaki dosyalar (başlatıcı, betikler, yapılandırma ve dokümantasyon) **[Mozilla Public License 2.0](LICENSE)** lisansı altındadır.
 
-Zen Browser'ın kendisi **[Mozilla Public License 2.0 (MPL-2.0)](https://github.com/zen-browser/desktop/blob/dev/LICENSE)** lisansı altındadır. Zen Browser kaynak koduna ve dosyalarına ait tüm haklar ilgili yazar ve katkıda bulunanlara aittir.
+Zen Browser'ın kendisi de **[MPL-2.0](https://github.com/zen-browser/desktop/blob/dev/LICENSE)** lisansı altındadır. Zen Browser kaynak koduna ve dosyalarına ait tüm haklar ilgili yazar ve katkıda bulunanlara aittir.
 
 ---
 

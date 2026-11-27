@@ -210,7 +210,7 @@ jobs:
 
           Write-Host "   Compiler: $csc"
 
-          & $csc /nologo /out:PortableZen.exe /target:winexe /win32icon:zen-browser.ico src\launcher.cs
+          & $csc /nologo /out:PortableZen.exe /target:winexe /win32icon:zen-browser.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll src\launcher.cs
 
           if (Test-Path "PortableZen.exe") {
             $size = [math]::Round((Get-Item "PortableZen.exe").Length / 1KB, 1)
@@ -245,7 +245,7 @@ jobs:
           # 1) app directory (with browser files)
           Copy-Item -Path "app" -Destination "$staging\app" -Recurse -Force
 
-          # 2) data directory (profile skeleton — .gitkeep, user.js, profile.ini)
+          # 2) data directory (profile skeleton — .gitkeep, user.js)
           Copy-Item -Path "data" -Destination "$staging\data" -Recurse -Force
 
           # 3) PortableZen.exe

@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://zen-browser.app"><img src="https://img.shields.io/badge/Zen%20Browser-Official%20Site-8338ec?style=for-the-badge&logo=firefox&logoColor=white" alt="Zen Browser"></a>
   <a href="https://github.com/zen-browser/desktop"><img src="https://img.shields.io/github/stars/zen-browser/desktop?style=for-the-badge&logo=github&label=Upstream%20Stars&color=ff6f61" alt="Stars"></a>
-  <a href="https://github.com/zen-browser/desktop/blob/dev/LICENSE"><img src="https://img.shields.io/badge/License-MPL--2.0-blue?style=for-the-badge" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MPL--2.0-blue?style=for-the-badge" alt="License"></a>
   <a href="#"><img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d4?style=for-the-badge&logo=windows&logoColor=white" alt="Platform"></a>
 </p>
 
@@ -23,20 +23,21 @@
 
 ## 📖 About
 
-This project is a **portable repackaging** of [Zen Browser](https://zen-browser.app) for Windows. It allows you to run Zen Browser directly from a USB drive, an external hard drive, or any folder on your computer — **without installation and without leaving traces on the host system**.
+This project is a **portable repackaging** of [Zen Browser](https://zen-browser.app) for Windows. It lets you run Zen Browser directly from a USB drive, an external hard drive, or any folder on your computer — **without installing it** and while keeping your browser data inside that folder.
 
 > [!NOTE]
-> Zen Browser is an open-source, Firefox-based browser focused on productivity and a calmer internet experience. This portable build does **not** modify the original browser in any way; it simply wraps the official binaries with a portable launcher that redirects the profile directory.
+> Zen Browser is an open-source, Firefox-based browser focused on productivity and a calmer internet experience. This portable build does **not** modify the browser in any way; it uses the official binaries and a small launcher that points Zen at a profile folder inside the portable directory.
 
 ### ✨ Key Features
 
 | Feature | Description |
 |---|---|
-| 🔒 **Zero Installation** | No admin rights needed. No registry entries. No leftover files. |
-| 💾 **Fully Self-Contained** | Browser binaries, profiles, bookmarks, extensions — everything lives inside one folder. |
-| 👤 **Multi-Profile Support** | 5 pre-configured profile slots out of the box. Switch between work, personal, and other contexts effortlessly. |
-| 🔄 **Sync-Friendly** | Move the entire folder to another machine, plug in, and continue exactly where you left off. |
-| 🛡️ **Privacy by Default** | Runs with `-no-remote` flag, ensuring complete isolation from any locally installed Firefox/Zen instance. |
+| 🔒 **Zero Installation** | No installer, no admin rights. Extract and run. |
+| 💾 **Self-Contained** | Browser files, profiles, bookmarks, extensions — everything lives inside one folder. |
+| 👤 **Multiple Profiles** | 5 profile slots out of the box, plus any number of named profiles. Hold <kbd>Shift</kbd> while starting to pick one. |
+| 🔗 **Opens Links and Files** | Works with links, `.html` files and "Open with". Starting it again while it is open simply opens a new window. |
+| 🧹 **Cleans Up After Itself** | When the browser closes, `PortableZen.exe` removes the small registry values Zen wrote for this folder. |
+| 🔄 **Auto-Built Releases** | A GitHub Actions workflow packages every new Zen release, usually within hours. |
 
 ---
 
@@ -49,38 +50,92 @@ This project is a **portable repackaging** of [Zen Browser](https://zen-browser.
 
 ### Setup
 
-1. **Download the latest release** from the [📦 Releases](https://github.com/Metee01/Zen-Browser-Portable/releases) page and extract the ZIP to any location — your desktop, a USB drive, an external hard drive, anywhere you like.
-
-2. **Download Zen Browser** from the [official download page](https://zen-browser.app/download):
-   - Download the **Windows (x64)** installer or archive.
-   - Extract the browser files and place them inside the `app/win/` directory so that `app/win/zen.exe` exists.
-
-   > [!TIP]
-   > You can also copy the contents of an existing Zen Browser installation from `C:\Program Files\Zen Browser\` directly into `app/win/`.
-
-3. **Double-click `PortableZen.exe`** and start browsing!
-
-That's it — your portable Zen Browser is ready to use. 🎉
+1. Download the latest `Zen-Portable-v<version>.zip` from the [📦 Releases](https://github.com/Metee01/Zen-Browser-Portable/releases) page. It already contains the official Zen Browser files.
+2. Extract the ZIP anywhere you like — your desktop, a USB drive, an external disk.
+3. Double-click **`PortableZen.exe`** and start browsing! 🎉
 
 > [!TIP]
-> You can also run `zenbrowser.bat` directly if you prefer launching from the command line.
+> `zenbrowser.bat` is a plain-text alternative to the `.exe` if you prefer a launcher you can read and edit. It does not perform the registry cleanup described below.
+
+<details>
+<summary>Building from the repository instead of a release</summary>
+
+1. Clone or download this repository.
+2. Put the Zen Browser files into `app/win/` so that `app/win/zen.exe` exists. You can extract them from the official installer with 7-Zip (the files are in its `core` folder) or copy them from `C:\Program Files\Zen Browser\`.
+3. Compile the launcher (no SDK needed, the compiler ships with Windows):
+
+   ```bat
+   C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /target:winexe /win32icon:zen-browser.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:PortableZen.exe src\launcher.cs
+   ```
+
+   Or just use `zenbrowser.bat`.
+</details>
 
 ---
 
-## 🔍 Security & False Positives
+## 👤 Profiles
 
-Some antivirus engines may flag `PortableZen.exe` as suspicious. **This is a false positive.** Here's why:
+The ZIP comes with five profile folders, `data/profile1` … `data/profile5`. `profile1` is used by default.
 
-`PortableZen.exe` is a minimal C# wrapper compiled with the built-in Windows .NET compiler (`csc.exe`). It simply locates `zen.exe` in the `app/win/` directory and launches it with the correct profile path — no external dependencies, no obfuscation, no hidden behavior.
+| How | What happens |
+|---|---|
+| Double-click `PortableZen.exe` | Opens `data/profile1`. |
+| Hold <kbd>Shift</kbd> while starting | A small window lists every folder in `data/`; pick one. |
+| `PortableZen.exe --profile 2` | Opens `data/profile2`. Handy for a desktop shortcut. |
+| `PortableZen.exe --profile work` | Opens `data/work`, creating it (with the portable defaults) if it does not exist. |
+
+Different profiles can be open at the same time. In `zenbrowser.bat`, change `profile1` on the `set "PROFILE=profile1"` line.
+
+> [!WARNING]
+> Do not use Zen's `-ProfileManager`. It stores its profile list in `%APPDATA%`, outside the portable folder.
+
+---
+
+## 🔄 Updating
+
+1. Close Zen Browser.
+2. Download the newest ZIP from [Releases](https://github.com/Metee01/Zen-Browser-Portable/releases).
+3. In your portable folder, delete the **`app\win`** folder.
+4. From the new ZIP, copy the **`app`** folder and **`PortableZen.exe`** into your portable folder.
+
+Your bookmarks, passwords, extensions and history live in `data/` and are not touched.
+
+> [!CAUTION]
+> Never delete the `data/` folder when updating — it holds all of your browser data.
+
+---
+
+## ⚙️ How It Works
+
+`PortableZen.exe` is a small C# program ([`src/launcher.cs`](src/launcher.cs)) compiled with the C# compiler that ships with Windows. When you start it, it:
+
+1. Finds `app\win\zen.exe` next to itself (all paths are relative, so the folder can move).
+2. Starts Zen with `-profile data\<profile>`, which keeps all browser data inside the portable folder.
+3. Passes any links or files you opened it with straight to Zen. If this portable Zen is already open, Zen hands them to the running window instead of starting a second copy, and it never connects to a separately installed Zen.
+4. Waits in the background until the browser closes, then removes the registry values Zen wrote for this folder (see below).
+
+The portable profiles also ship with a `user.js` that turns off automatic updates, the default-browser prompt, the crash reporter, telemetry and studies, and keeps the cache in memory instead of on the disk to spare USB drives. You can edit it freely; it is applied every time the browser starts.
+
+---
+
+## 🛡️ Privacy Notes
+
+- **Browser data:** Profiles, history, passwords, extensions and cache stay inside `data/`. In our testing nothing was written to `%APPDATA%\zen` or `%LOCALAPPDATA%\zen`.
+- **Registry:** While it runs, Zen (like Firefox) stores a few small values under `HKCU\Software\Mozilla\Zen`, such as the window size and the last launch time. They contain no browsing data. `PortableZen.exe` deletes the ones belonging to its own folder when the browser closes; values of an installed Zen are left alone. `zenbrowser.bat` does not clean them.
+- **Windows itself** may still remember that a program ran (for example in recent-files lists or prefetch data). That is outside of what a portable app can control.
+- **Download from the source:** Use the official Releases page of this repository, which is built automatically from the official Zen Browser installer.
+
+---
+
+## 🔍 Antivirus Warnings
+
+Some antivirus engines or Windows SmartScreen may warn about `PortableZen.exe` because it is small, new and not code-signed. **It does not contain any malicious code.** The full source is in [`src/launcher.cs`](src/launcher.cs) and the release workflow compiles it from that file:
 
 ```
 src\launcher.cs  →  csc.exe /target:winexe  →  PortableZen.exe
 ```
 
-This pattern — hiding a console window and executing commands — is sometimes flagged by heuristic-based antivirus engines, but **the file does not contain any malicious code.**
-
-> [!TIP]
-> If you don't trust the `.exe` file, you can simply run `zenbrowser.bat` directly — it does the exact same thing. The `.exe` is provided purely for convenience (allows you to see Zen Browser in a UI through programs like PortableApps.com).
+If you prefer, run `zenbrowser.bat` instead.
 
 ---
 
@@ -88,110 +143,19 @@ This pattern — hiding a console window and executing commands — is sometimes
 
 ```
 Zen-Browser-Portable/
-│
 ├── app/
-│   └── win/                    # Zen Browser binaries (not tracked by Git)
-│       ├── zen.exe             # Main browser executable
-│       └── ...                 # All other browser files
-│
+│   └── win/              # Zen Browser files (included in the release ZIP)
+│       ├── zen.exe
+│       └── ...
 ├── data/
-│   ├── profile.ini             # Profile manager configuration
-│   ├── profile1/               # Default profile (active)
-│   ├── profile2/               # Additional profile slot
-│   ├── profile3/               # Additional profile slot
-│   ├── profile4/               # Additional profile slot
-│   └── profile5/               # Additional profile slot
-│
+│   ├── profile1/         # Default profile
+│   ├── profile2/ … profile5/
+│   └── <name>/           # Any profile you create with --profile <name>
 ├── src/
-│   └── launcher.cs             # C# wrapper source (compiled to PortableZen.exe in CI)
-│
-├── PortableZen.exe             # Portable launcher (built in CI, not tracked by Git)
-├── zenbrowser.bat              # Launcher batch script (source)
+│   └── launcher.cs       # Source of PortableZen.exe
+├── PortableZen.exe       # Launcher (built by the release workflow)
+└── zenbrowser.bat        # Plain-text alternative launcher
 ```
-
-> [!IMPORTANT]
-> You need to supply the Zen Browser binaries yourself by following the [Setup](#setup) instructions. This ensures you always use the latest version directly from the official source.
-
----
-
-## ⚙️ How It Works
-
-The portable launcher is powered by a simple C# wrapper that starts Zen Browser with a portable profile:
-
-```csharp
-string dir = Path.GetDirectoryName(
-    System.Reflection.Assembly.GetExecutingAssembly().Location);
-string zenExe = Path.Combine(dir, "app", "win", "zen.exe");
-string profile = Path.Combine(dir, "data", "profile1");
-Process.Start(new ProcessStartInfo {
-    FileName = zenExe,
-    Arguments = "-profile \"" + profile + "\" -no-remote",
-    UseShellExecute = false,
-    CreateNoWindow = true
-});
-```
-
-**What each part does:**
-
-| Component | Purpose |
-|---|---|
-| `GetExecutingAssembly()` | Resolves to the directory where the launcher lives, making all paths **relative** and truly portable. |
-| `-profile` | Tells Zen/Firefox to use the specified directory for all profile data instead of the default `%APPDATA%` location. |
-| `-no-remote` | Prevents the portable instance from connecting to any already-running Firefox or Zen Browser session on the host machine. |
-| `CreateNoWindow = true` | Hides the console window for a cleaner experience. |
-
-The `PortableZen.exe` is compiled from `src/launcher.cs` during CI using the built-in Windows C# compiler (`csc.exe`), providing a clean double-click experience with the custom Zen icon. Alternatively, you can run `zenbrowser.bat` directly — it achieves the same result.
-
----
-
-## 👤 Multi-Profile Management
-
-This portable build comes with **5 pre-configured profile slots** defined in `data/profile.ini`:
-
-| Profile | Path | Status |
-|---|---|---|
-| Profile1 | `data/profile1/` | ✅ Default |
-| Profile2 | `data/profile2/` | Available |
-| Profile3 | `data/profile3/` | Available |
-| Profile4 | `data/profile4/` | Available |
-| Profile5 | `data/profile5/` | Available |
-
-### Switching Profiles
-
-To launch a different profile, edit the `zenbrowser.bat` file and change `profile1` to your desired profile:
-
-```batch
-"%APP_DIR%\win\zen.exe" -profile "%DATA_DIR%\profile2" -no-remote
-```
-
-Alternatively, you can use Zen Browser's built-in **Profile Manager** by launching with the `-ProfileManager` flag:
-
-```batch
-"%APP_DIR%\win\zen.exe" -ProfileManager
-```
-
----
-
-## 🔄 Updating Zen Browser
-
-To update to a newer version of Zen Browser:
-
-1. Download the latest Zen Browser from [zen-browser.app/download](https://zen-browser.app/download).
-2. Delete the contents of the `app/win/` folder.
-3. Extract the new browser files into `app/win/`.
-4. Your profiles and data remain untouched in the `data/` folder.
-
-> [!CAUTION]
-> Do **not** delete the `data/` directory when updating. It contains all your bookmarks, passwords, extensions, and browsing history.
-
----
-
-## 🛡️ Security & Privacy Notes
-
-- **Isolated Execution:** The `-no-remote` flag ensures this instance runs completely independently.
-- **No System Traces:** Since profiles are stored within the portable folder, nothing is written to the Windows registry or `%APPDATA%`.
-- **USB Safe:** You can run this from a USB drive and remove it without leaving any data on the host computer.
-- **Your Responsibility:** While this setup is portable, always ensure you're downloading Zen Browser binaries from the [official source](https://zen-browser.app) to avoid tampered builds.
 
 ---
 
@@ -227,9 +191,9 @@ This project is a **community portable repackaging** and is **not** an official 
 
 ## 📜 License
 
-This portable configuration (launcher scripts, directory structure, and documentation) is provided as-is for personal use.
+The files in this repository (launcher, scripts, configuration and documentation) are licensed under the **[Mozilla Public License 2.0](LICENSE)**.
 
-Zen Browser itself is licensed under the **[Mozilla Public License 2.0 (MPL-2.0)](https://github.com/zen-browser/desktop/blob/dev/LICENSE)**. All rights to the Zen Browser source code and binaries belong to their respective authors and contributors.
+Zen Browser itself is also licensed under **[MPL-2.0](https://github.com/zen-browser/desktop/blob/dev/LICENSE)**. All rights to the Zen Browser source code and binaries belong to their respective authors and contributors.
 
 ---
 

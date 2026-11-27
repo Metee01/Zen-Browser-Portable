@@ -1,13 +1,10 @@
 // Zen Browser Portable — Default Preferences
-// This file is auto-generated on first launch. You may edit it freely.
+// This file ships with Zen Browser Portable. You may edit it freely.
 // Preferences here override defaults each time the browser starts.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-// ─── Portable Mode ─────────────────────────────────────────────────
-user_pref("zen.portable.mode", true);
 
 // ─── Disk Cache ─────────────────────────────────────────────────────
 // Disabled to avoid excessive writes on removable media (USB drives).
